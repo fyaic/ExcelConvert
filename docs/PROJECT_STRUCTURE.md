@@ -51,11 +51,11 @@ graph TB
         J[data/output/]
     end
 
-    A -. F
-    B -. G
-    C -. H
-    D -. I
-    E -. J
+    A -.-> F
+    B -.-> G
+    C -.-> H
+    D -.-> I
+    E -.-> J
 
     subgraph "规则系统"
         K[workflow_builder.py]
