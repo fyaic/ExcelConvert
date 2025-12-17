@@ -1,0 +1,91 @@
+# 动态工作流节点配置文件
+# 通过修改此文件可以控制规则的执行顺序和启用状态
+
+# 工作流全局配置
+workflow:
+  type: sequential  # 工作流类型: sequential(串行), parallel(并行), custom(自定义)
+  state_key: product_data  # 状态中存储数据的键名
+
+# 节点定义
+nodes:
+  format_fba_id:
+    module: format_fba_id
+    function: apply_fba_rule
+    description: "格式化FBA箱号"
+    enabled: true
+
+  replace_parentheses:
+    module: replace_parentheses
+    function: apply_parentheses_rule
+    description: "替换英文括号为中文括号"
+    enabled: true
+
+  calculate_totals:
+    module: calculate_totals
+    function: apply_calculate_rules
+    description: "计算价格相关字段"
+    enabled: true
+
+  fill_missing_values:
+    module: fill_missing_values
+    function: apply_fill_missing_values_rule
+    description: "补充空值"
+    enabled: true
+
+  # uppercase_example:  # 示例：新添加的规则
+#   module: uppercase_example
+#   function: apply_uppercase_rule
+#   description: "将指定字段转换为大写"
+#   enabled: true
+
+#  price_validation:  # 示例：示范规则的节点
+#     module: price_validation
+#     function: apply_price_validation_rule
+#     description: "验证价格合理性"
+#     enabled: false
+
+# 执行流程定义（edges）
+# 可以灵活定义节点之间的执行关系
+edges:
+  - from: START
+    to: format_fba_id
+  - from: format_fba_id
+    to: replace_parentheses
+  - from: replace_parentheses
+    to: calculate_totals
+  - from: calculate_totals
+#    to: price_validation
+#  - from: price_validation
+    to: fill_missing_values
+  - from: fill_missing_values
+    to: END
+
+# 禁用的节点列表（优先级高于enabled字段）
+# 添加到这个列表的节点将被完全跳过
+disabled_nodes: []
+
+# 节点组配置（用于批量控制）
+node_groups:
+  basic_formatting:
+    description: "基础格式化规则"
+    nodes:
+      - format_fba_id
+      - replace_parentheses
+
+  calculations:
+    description: "计算类规则"
+    nodes:
+      - calculate_totals
+
+  data_completion:
+    description: "数据补全规则"
+    nodes:
+      - fill_missing_values
+
+# 高级配置（预留）
+advanced:
+  parallel_nodes: []  # 可以并行执行的节点组
+  conditional_edges: []  # 条件边配置
+  error_handling:  # 错误处理策略
+    strategy: continue  # continue(继续), stop(停止), fallback(降级)
+    fallback_nodes: []  # 降级节点
