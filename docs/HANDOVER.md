@@ -53,6 +53,8 @@ langgraph>=0.0.30    # 工作流引擎
 openpyxl>=3.1.0      # Excel操作
 pandas>=2.0.0        # 数据处理
 pyyaml>=6.0          # 配置解析
+requests>=2.31.0     # HTTP请求（LLM API调用）
+python-dotenv>=1.0.0 # 环境变量管理
 ```
 
 #### 项目结构
@@ -84,7 +86,11 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 3. 安装依赖
 pip install -r requirements.txt
 
-# 4. 测试运行
+# 4. 配置 LLM API（可选）
+cp .env.example .env
+# 编辑 .env 文件，填入 LLM API 配置
+
+# 5. 测试运行
 python main.py -i test.xlsx
 ```
 
@@ -257,15 +263,21 @@ python main.py -i clean.xlsx --skip-preprocessing
 
 ### 4.2 常见需求配置
 
-#### 需求1：FBA箱号格式化
+#### 需求1：LLM 智能字段映射
+- 文件已包含：`rules/field_mapping_llm.py`
+- 支持自动识别和映射 31 种标准字段
+- 需要配置 `.env` 文件中的 LLM API 参数
+- 推荐使用智谱 AI 或 OpenAI 的 API 服务
+
+#### 需求2：FBA箱号格式化
 - 文件已包含：`rules/format_fba_id.py`
 - 默认启用，无需配置
 
-#### 需求2：价格计算
+#### 需求3：价格计算
 - 文件已包含：`rules/calculate_totals.py`
 - 自动计算总价、总个数等
 
-#### 需求3：填充默认值
+#### 需求4：填充默认值
 - 文件已包含：`rules/fill_missing_values.py`
 - 自动填充缺失的品牌、型号等字段
 
@@ -319,10 +331,11 @@ A3：优化建议：
 - 邮箱：support@multiaconvert.com
 
 ### 文档资源
-- 项目 README：快速上手指南
+- 项目 README：快速上手指南（包含 LLM 配置说明）
 - CLAUDE.md：开发人员详细指南
-- PROJECT_STRUCTURE.md：架构说明
-- rules/README.md：规则开发指南
+- PROJECT_STRUCTURE.md：架构说明（包含 LLM 字段映射架构）
+- rules/README.md：规则开发指南（包含 field_mapping_llm.py 详细说明）
+- .env.example：LLM API 配置模板
 
 ### 版本信息
 - 当前版本：v1.0.0

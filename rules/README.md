@@ -121,7 +121,7 @@ def apply_规则名(data: Dict[str, Any]) -> Dict[str, Any]:
 
 ## 📚 示例文件说明
 
-我们提供了两个示例文件，帮助您快速上手：
+我们提供了三个示例文件，帮助您快速上手：
 
 ### 1️⃣ `_template.py` - 基础模板
 
@@ -172,6 +172,47 @@ if price and cost:
 - 需要实现复杂逻辑时
 - 需要进行数据验证时
 - 需要添加计算字段时
+
+### 3️⃣ `field_mapping_llm.py` - LLM 智能字段映射
+
+**用途**：使用**大语言模型**智能识别和映射非标准字段名到标准字段名
+
+**核心价值**：
+- 🤖 **自动识别**：利用 LLM 自动识别字段名的语义含义
+- 🎯 **精准映射**：支持 31 种标准字段的自动映射
+- ⚡ **批量处理**：一次性处理一行数据的所有字段
+- 💾 **智能缓存**：避免重复调用 LLM API，降低成本
+- 🛡️ **容错机制**：API 失败时自动降级，不影响其他规则
+
+**标准字段列表**（31个）：
+```
+FBA箱号, 中文品名, 英文品名, SKU码, 海关编码,
+材质（中文）, 材质（英文）, 品牌, 品牌类型, 型号, 用途,
+带电、磁, 总箱数, 单箱净重, 单箱毛重, 单箱个数,
+产品总个数, 申报单价, 申报总价, 申报币种, 采购单价,
+采购总价, 采购币种, 长 cm, 宽 cm, 高 cm,
+亚马逊内部编号 REFERENCE ID（PO）, 仓库代码 AMAZON, FBA仓库地址,
+图片, 产品在平台链接
+```
+
+**配置要求**：
+需要在项目根目录的 `.env` 文件中配置 LLM API：
+```bash
+LLM_BASE_URL=https://api.example.com/v1
+LLM_API_KEY=your-api-key-here
+LLM_MODEL=glm-4.5-x
+```
+
+**推荐服务商**：
+| 服务商 | 注册地址 | 推荐模型 | 特点 |
+|-------|---------|---------|-----|
+| 智谱 AI | https://open.bigmodel.cn/ | glm-4.5-x | 性价比高，中文友好 |
+| OpenAI | https://platform.openai.com/ | gpt-4o-mini | 快速稳定，准确率高 |
+
+**何时使用**：
+- 处理多种不同客户的 Excel 模板时
+- 字段名格式差异较大时
+- 需要减少手动配置映射规则时
 
 ---
 
@@ -234,6 +275,7 @@ edges:
 
 | 规则文件 | 主函数 | 功能描述 | 复杂度 |
 |---------|--------|---------|--------|
+| `field_mapping_llm.py` | `apply_field_mapping_llm_rule` | LLM智能字段映射，支持31种标准字段 | 🔴 复杂 |
 | `format_fba_id.py` | `apply_fba_rule` | FBA箱号格式化，支持多种格式 | 🟡 中等 |
 | `replace_parentheses.py` | `apply_parentheses_rule` | 英文括号转中文括号 | 🟢 简单 |
 | `calculate_totals.py` | `apply_calculate_rule` | 计算总价、总数量等 | 🟡 中等 |
