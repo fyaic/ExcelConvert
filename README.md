@@ -84,6 +84,9 @@ python main.py -i input.xlsx -o output/result.xlsx
 
 ## ✨ 核心特性
 
+### 🤖 LLM 智能字段映射
+利用大语言模型自动识别和映射非标准字段名到标准字段名，支持多种不同 Excel 模板的自动适配，显著提高模板兼容性和识别率
+
 ### 🎯 零编码适配
 通过配置文件驱动，快速适应新的Excel模板，无需修改代码
 
@@ -125,11 +128,24 @@ graph TB
         K[workflow_builder.py]
         L[nodes_config.yaml]
         M[规则模块]
+
+        subgraph "规则节点"
+            N1[field_mapping_llm<br/>LLM智能字段映射]
+            N2[format_fba_id<br/>FBA箱号格式化]
+            N3[replace_parentheses<br/>括号替换]
+            N4[calculate_totals<br/>价格计算]
+            N5[fill_missing_values<br/>空值填充]
+        end
     end
 
     D --> K
     K --> L
     L --> M
+    M --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
 ```
 
 ### 核心组件
@@ -139,6 +155,11 @@ graph TB
 | **excel_preprocess.py** | Excel预处理，清理无用数据 | Python |
 | **excel_to_json.py** | 转换为IDR中间格式 | Python |
 | **json_transformer.py** | LangGraph规则引擎 | Python |
+| **field_mapping_llm.py** | LLM智能字段映射规则 | Python |
+| **format_fba_id.py** | FBA箱号格式化规则 | Python |
+| **replace_parentheses.py** | 括号替换规则 | Python |
+| **calculate_totals.py** | 价格计算规则 | Python |
+| **fill_missing_values.py** | 空值填充规则 | Python |
 | **json_to_excel.py** | 生成最终Excel | Python |
 
 ---
@@ -170,6 +191,28 @@ graph TB
   "total_units": 90,
   "total_value": 315.00,
   "currency": "USD"
+}
+```
+
+### LLM 智能字段映射
+
+```python
+# 输入（多种非标准字段名）
+{
+  "产品名称": "螺丝刀套装",           # 映射到 "中文品名"
+  "SKU编号": "SD001",               # 映射到 "SKU码"
+  "长度(厘米)": "30",               # 映射到 "长 cm"
+  "FBA箱号（连号用"-"表示）": "...", # 映射到 "FBA箱号"
+  "仓库代码AMAZON": "YYZ7"          # 映射到 "仓库代码 AMAZON"
+}
+
+# 输出（标准字段名）
+{
+  "中文品名": "螺丝刀套装",
+  "SKU码": "SD001",
+  "长 cm": "30",
+  "FBA箱号": "...",
+  "仓库代码 AMAZON": "YYZ7"
 }
 ```
 
@@ -207,7 +250,50 @@ my_rule:
 ### 示例文件说明
 
 - **`_template.py`** - 规则模板文件，包含标准结构和示例代码
-- **`price_validation.py`** - 完整的价格验证示例，展示如何编写复杂规则
+- **`field_mapping_llm.py`** - LLM 智能字段映射规则，自动识别和映射非标准字段名
+- **`format_fba_id.py`** - FBA 箱号格式化规则
+- **`replace_parentheses.py`** - 括号替换规则
+- **`calculate_totals.py`** - 价格计算规则
+- **`fill_missing_values.py`** - 空值填充规则
+
+### LLM 智能字段映射规则
+
+`field_mapping_llm.py` 是一个基于大语言模型的智能字段映射规则，用于解决多种不同 Excel 模板的字段名差异问题。
+
+**功能特点**：
+- 🤖 **自动识别**：利用 LLM 自动识别非标准字段名的语义含义
+- 🎯 **精准映射**：将 31 种标准字段作为映射目标，确保准确性
+- ⚡ **批量处理**：一次性处理一行数据的所有字段，提高效率
+- 💾 **智能缓存**：避免重复调用 LLM API，降低成本
+- 🛡️ **容错机制**：API 调用失败时自动降级，不影响其他规则执行
+
+**标准字段列表**（31个）：
+```
+FBA箱号, 中文品名, 英文品名, SKU码, 海关编码,
+材质（中文）, 材质（英文）, 品牌, 品牌类型, 型号, 用途,
+带电、磁, 总箱数, 单箱净重, 单箱毛重, 单箱个数,
+产品总个数, 申报单价, 申报总价, 申报币种, 采购单价,
+采购总价, 采购币种, 长 cm, 宽 cm, 高 cm,
+亚马逊内部编号 REFERENCE ID（PO）, 仓库代码 AMAZON, FBA仓库地址,
+图片, 产品在平台链接
+```
+
+**配置要求**：
+需要配置 `.env` 文件中的 LLM API 参数：
+```bash
+LLM_BASE_URL=https://api.example.com/v1
+LLM_API_KEY=your-api-key-here
+LLM_MODEL=glm-4.5-x
+```
+
+**使用方式**：
+在 `rules/nodes_config.yaml` 中启用：
+```yaml
+field_mapping_llm:
+  module: field_mapping_llm
+  function: apply_field_mapping_llm_rule
+  enabled: true  # 设为 false 可禁用 LLM 映射
+```
 
 ### 规则优势
 
@@ -261,10 +347,41 @@ my_rule:
 ### 从源码安装
 
 ```bash
+# 克隆项目
 git clone https://github.com/your-username/ExcelConvert.git
 cd ExcelConvert
+
+# 创建虚拟环境（推荐）
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# 或
+.venv\Scripts\activate  # Windows
+
+# 安装依赖
 pip install -r requirements.txt
 ```
+
+### 配置 LLM API（可选）
+
+如果需要使用 LLM 智能字段映射功能：
+
+```bash
+# 1. 复制环境配置模板
+cp .env.example .env
+
+# 2. 编辑 .env 文件，填入 LLM API 配置
+# 推荐使用智谱 AI (https://open.bigmodel.cn/) 或 OpenAI
+
+# 3. 验证配置
+python -c "import os; print('LLM配置' + ('完整' if all([os.getenv('LLM_BASE_URL'), os.getenv('LLM_API_KEY')]) else '不完整'))"
+```
+
+### 获取 LLM API 密钥
+
+| 服务商 | 注册地址 | 推荐模型 | 特点 |
+|-------|---------|---------|-----|
+| 智谱 AI | https://open.bigmodel.cn/ | glm-4.5-x | 性价比高，中文友好 |
+| OpenAI | https://platform.openai.com/ | gpt-4o-mini | 快速稳定，准确率高 |
 
 ### 使用 Docker
 

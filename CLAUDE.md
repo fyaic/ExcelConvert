@@ -30,11 +30,16 @@ python main.py -i input.xlsx -o output/result.xlsx
 
 ### 开发环境
 ```bash
-# 激活虚拟环境
-.venv\Scripts\activate  # Windows
+# 激活虚拟环境（Windows）
+.venv\Scripts\activate
+# 或（Linux/Mac）
+source .venv/bin/activate
 
-# 安装依赖（示例，根据实际情况补充）
+# 安装核心依赖（根据实际需要）
 pip install openpyxl pandas pyyaml langgraph
+
+# 查看虚拟环境中的已安装包
+pip list
 ```
 
 ## 架构概述
@@ -81,13 +86,23 @@ data/raw/ → data/preprocess/ → data/temp/ → data/transformed/ → data/out
 ### 调试转换问题
 1. 检查 `data/temp/` - 查看 IDR 格式的中间输出
 2. 检查 `data/transformed/` - 查看规则处理后的结果
-3. 在规则中添加 `log()` 输出调试信息
+3. 在规则中添加 `print()` 或 `log()` 输出调试信息
 4. 单独测试问题规则
 
 ### 测试单个规则
 ```bash
+# 直接运行规则文件（包含 __main__ 部分）
 python rules/your_rule.py
+
+# 在 Python 交互环境中测试
+python -c "from rules.your_rule import apply_your_rule_rule; print(apply_your_rule_rule(test_data))"
 ```
+
+### 管理规则执行顺序
+编辑 `rules/nodes_config.yaml` 文件：
+- 修改 `edges` 部分调整规则执行顺序
+- 使用 `enabled: false` 禁用特定规则
+- 使用 `disabled_nodes` 列表批量禁用规则
 
 ### 查看项目结构
 ```bash
@@ -97,12 +112,26 @@ ls data/output/
 # 查看中间结果
 ls data/temp/
 ls data/transformed/
+
+# 查看项目目录结构（跨平台）
+find . -name "*.py" -o -name "*.yaml" | grep -v __pycache__ | sort
+```
+
+### 性能优化
+```bash
+# 处理大文件时的建议
+# 1. 使用跳过预处理选项
+python main.py -i large_file.xlsx --skip-preprocessing
+
+# 2. 批量处理时使用并行（如果支持）
+python main.py -i data/large_files/ --batch
 ```
 
 ## 注意事项
 
-- 项目使用 Python 3.8+
+- 项目使用 Python 3.8+（当前虚拟环境使用 Python 3.13）
 - 处理大文件时建议 8GB+ 内存
 - 虚拟环境位于 `.venv/` 目录
 - 主入口是 `main.py`，协调四个核心模块
-- 规则系统支持热加载，修改配置后无需重启
+- 规则系统支持热加载，修改 `nodes_config.yaml` 后无需重启
+- 项目使用 LangGraph 进行工作流管理，所有规则通过配置文件动态加载

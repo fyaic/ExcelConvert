@@ -43,6 +43,8 @@
 | 项目为什么要做？技术选型依据？ | [需求分析](REQUIREMENTS.md#技术选型) |
 | 系统如何工作？模块间如何交互？ | [架构设计](PROJECT_STRUCTURE.md#系统架构) |
 | 如何快速上手开发？环境如何配置？ | [开发指南](DEVELOPMENT.md#快速开始) |
+| LLM 智能字段映射如何配置？ | [项目主文档](../README.md#llm-智能字段映射规则) |
+| 如何配置 LLM API？ | [项目主文档](../README.md#配置-llm-api可选) |
 | 性能瓶颈在哪？如何优化？ | [技术分析](TECHNICAL_ANALYSIS.md#性能优化) |
 | 如何部署到生产环境？ | [交接文档](HANDOVER.md#部署指南) |
 | 如何添加新的业务规则？ | [规则开发指南](../rules/README.md#快速开始) |

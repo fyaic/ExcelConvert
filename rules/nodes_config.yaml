@@ -8,6 +8,12 @@ workflow:
 
 # 节点定义
 nodes:
+  field_mapping_llm:
+    module: field_mapping_llm
+    function: apply_field_mapping_llm_rule
+    description: "使用LLM智能映射字段名"
+    enabled: true
+
   format_fba_id:
     module: format_fba_id
     function: apply_fba_rule
@@ -48,6 +54,8 @@ nodes:
 # 可以灵活定义节点之间的执行关系
 edges:
   - from: START
+    to: field_mapping_llm
+  - from: field_mapping_llm
     to: format_fba_id
   - from: format_fba_id
     to: replace_parentheses
@@ -69,6 +77,7 @@ node_groups:
   basic_formatting:
     description: "基础格式化规则"
     nodes:
+      - field_mapping_llm
       - format_fba_id
       - replace_parentheses
 

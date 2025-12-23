@@ -98,6 +98,12 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env
+
+# API keys and secrets
+*_key
+*_secret
+*.pem
 
 # Spyder project settings
 .spyderproject
