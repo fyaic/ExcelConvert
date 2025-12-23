@@ -210,6 +210,11 @@ VAT号: 增值税税号（注意：不是币种！）
                 # 更新映射结果并缓存
                 for original, mapped in batch_mapping.items():
                     if mapped in STANDARD_FIELDS:
+                        # 关键修复：检查目标标准字段是否已在原始数据中存在
+                        # 如果已存在，拒绝LLM的映射建议，保留原有数据
+                        if mapped in field_names:
+                            log(f"跳过映射: {original} -> {mapped}（目标字段已存在，保留原数据）")
+                            continue
                         mapping_result[original] = mapped
                         if cache is not None:
                             cache[original] = mapped
