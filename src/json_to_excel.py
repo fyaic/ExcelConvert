@@ -162,7 +162,7 @@ def normalize_field_name(field_name: str) -> str:
 
 
 def map_fields_to_template(record: Dict[str, Any], template_columns: List[str]) -> Dict[str, Any]:
-    """智能字段映射 - 修复FBA字段匹配bug的版本"""
+    """智能字段映射 - 修复FBA字段匹配bug的版本 + 修复尺寸字段换行符匹配"""
     mapped_record = {}
 
     # 先为FBA字段建立精确映射表，避免交叉匹配
@@ -184,10 +184,39 @@ def map_fields_to_template(record: Dict[str, Any], template_columns: List[str]) 
             mapped_record[template_col] = value
             continue
 
-        # 2. 处理换行符差异
-        normalized_template = template_col.replace('\\n', '\n')
-        if normalized_template in record:
-            value = record[normalized_template]
+        # 2. 尺寸字段特殊处理 - 处理空格和换行符的差异
+        # 模板中的格式: "长\ncm", "宽\ncm", "高\ncm" (带换行符)
+        # 数据中的格式: "长 cm", "宽 cm", "高 cm" (带空格)
+        dimension_fields = {
+            '长': ['长 cm', '长\ncm'],
+            '宽': ['宽 cm', '宽\ncm'],
+            '高': ['高 cm', '高\ncm']
+        }
+        for dim_key, variants in dimension_fields.items():
+            if dim_key in template_col and 'cm' in template_col.lower():
+                # 找到数据中的对应字段（不管空格还是换行符）
+                for variant in variants:
+                    if variant in record:
+                        value = record[variant]
+                        mapped_record[template_col] = value
+                        break
+                if value is not None:
+                    break
+        if value is not None:
+            continue
+
+        # 3. 处理换行符差异（通用处理）
+        # 将模板列中的换行符替换为空格来匹配
+        template_with_space = template_col.replace('\n', ' ')
+        if template_with_space in record:
+            value = record[template_with_space]
+            mapped_record[template_col] = value
+            continue
+
+        # 将模板列中的空格替换为换行符来匹配
+        template_with_newline = template_col.replace(' ', '\n')
+        if template_with_newline in record:
+            value = record[template_with_newline]
             mapped_record[template_col] = value
             continue
 
