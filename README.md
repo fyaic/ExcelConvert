@@ -78,7 +78,37 @@ python main.py -i clean.xlsx --skip-preprocessing
 
 # 指定输出文件
 python main.py -i input.xlsx -o output/result.xlsx
+
+# 自定义目录（例如使用 E 盘）
+python main.py -i E:/input --raw-dir E:/input --temp-dir E:/temp --output-dir E:/output
 ```
+
+### 环境变量配置（推荐）
+
+使用 `.env` 文件配置目录，避免每次输入参数：
+
+```bash
+# 1. 复制配置模板
+cp .env.example .env
+
+# 2. 编辑 .env 文件，配置目录
+# RAW_DIR=E:/input
+# TEMP_DIR=E:/temp
+# OUTPUT_DIR=E:/output
+
+# 3. 直接运行（自动读取 .env 配置）
+python main.py
+```
+
+**三种配置方式：**
+
+| 方式 | 适用场景 | 命令示例 |
+|------|----------|----------|
+| **命令行参数** | 临时任务、测试 | `python main.py -i file.xlsx --temp-dir E:/temp` |
+| **环境变量(.env)** | 固定工作流程 | 配置 `.env` 后直接运行 `python main.py` |
+| **Python API** | 自动化脚本 | `from main import convert_excel` |
+
+**优先级：** 命令行参数 > .env文件 > 默认值
 
 ---
 

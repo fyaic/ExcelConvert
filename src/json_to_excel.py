@@ -76,8 +76,16 @@ def find_template_columns(template_path: str) -> List[str]:
         return []
 
 
-def resolve_image_directory(json_file: str) -> str:
-    """解析图片目录路径 - 完全参考old版本的逻辑"""
+def resolve_image_directory(json_file: str, temp_dir: str = "data/temp") -> str:
+    """解析图片目录路径 - 完全参考old版本的逻辑
+
+    Args:
+        json_file: JSON文件路径
+        temp_dir: 临时文件目录（默认: data/temp）
+
+    Returns:
+        图片目录路径
+    """
     # 获取JSON文件名（去掉路径和扩展名）
     json_filename = os.path.splitext(os.path.basename(json_file))[0]
 
@@ -91,17 +99,16 @@ def resolve_image_directory(json_file: str) -> str:
     image_dir = None
 
     # 首先尝试images子目录
-    candidate_dir = os.path.join("data/temp", company_name, "images")
+    candidate_dir = os.path.join(temp_dir, company_name, "images")
     if os.path.exists(candidate_dir):
         image_dir = candidate_dir
     else:
         # 尝试公司名目录
-        candidate_dir = os.path.join("data/temp", company_name)
+        candidate_dir = os.path.join(temp_dir, company_name)
         if os.path.exists(candidate_dir):
             image_dir = candidate_dir
         else:
             # 如果没有精确匹配，尝试匹配sheet目录（多sheet情况）
-            temp_dir = "data/temp"
             if os.path.exists(temp_dir):
                 for subdir in os.listdir(temp_dir):
                     subdir_path = os.path.join(temp_dir, subdir)
@@ -113,8 +120,8 @@ def resolve_image_directory(json_file: str) -> str:
 
                 # 如果还没找到，尝试第一个子目录的images子目录
                 if image_dir is None:
-                    for item in os.listdir("data/temp"):
-                        item_path = os.path.join("data/temp", item)
+                    for item in os.listdir(temp_dir):
+                        item_path = os.path.join(temp_dir, item)
                         images_path = os.path.join(item_path, "images")
                         if os.path.isdir(images_path):
                             image_dir = images_path
@@ -381,10 +388,18 @@ def resize_image_to_fit_cell(img, cell_width: int, cell_height: int, padding: in
         log(f"调整图片大小失败，使用原始大小: {e}")
 
 
-def process_images_in_excel(wb, ws, records: List[Dict], json_file: str) -> None:
-    """处理Excel中的图片插入 - 完全参考old版本实现"""
+def process_images_in_excel(wb, ws, records: List[Dict], json_file: str, temp_dir: str = "data/temp") -> None:
+    """处理Excel中的图片插入 - 完全参考old版本实现
+
+    Args:
+        wb: 工作簿对象
+        ws: 工作表对象
+        records: 数据记录列表
+        json_file: JSON文件路径
+        temp_dir: 临时文件目录（默认: data/temp）
+    """
     try:
-        image_dir = resolve_image_directory(json_file)
+        image_dir = resolve_image_directory(json_file, temp_dir)
         if not image_dir:
             return
 
@@ -453,8 +468,18 @@ def process_images_in_excel(wb, ws, records: List[Dict], json_file: str) -> None
 
 def save_excel_with_template_and_images(df: pd.DataFrame, output_path: str,
                                       records: List[Dict], json_file: str,
-                                      template_path: str = None) -> None:
-    """使用模板格式保存Excel文件并插入图片 - 完全参考old版本"""
+                                      template_path: str = None,
+                                      temp_dir: str = "data/temp") -> None:
+    """使用模板格式保存Excel文件并插入图片 - 完全参考old版本
+
+    Args:
+        df: DataFrame对象
+        output_path: 输出文件路径
+        records: 数据记录列表
+        json_file: JSON文件路径
+        template_path: 模板文件路径
+        temp_dir: 临时文件目录（默认: data/temp）
+    """
     try:
         if template_path is None:
             template_path = DEFAULT_TEMPLATE
@@ -492,7 +517,7 @@ def save_excel_with_template_and_images(df: pd.DataFrame, output_path: str,
             ws.row_dimensions[r_idx].height = 80
 
         # 插入图片
-        process_images_in_excel(wb, ws, records, json_file)
+        process_images_in_excel(wb, ws, records, json_file, temp_dir)
 
         # 保持模板原有格式，但确保数据行使用标准文本格式
         for row_idx, row in enumerate(ws.iter_rows(), 1):
@@ -526,12 +551,26 @@ def save_excel_with_template_and_images(df: pd.DataFrame, output_path: str,
         log(f"保存Excel失败: {e}")
 
 
-def json_to_excel(input_path: str, output_path: str, template_path: str = None, process_images: bool = True) -> bool:
-    """JSON转Excel主函数"""
+def json_to_excel(input_path: str, output_path: str, template_path: str = None,
+                  process_images: bool = True, templates_dir: str = "data/templates",
+                  temp_dir: str = "data/temp") -> bool:
+    """JSON转Excel主函数
+
+    Args:
+        input_path: 输入JSON文件路径
+        output_path: 输出Excel文件路径
+        template_path: 模板文件路径（如果为None，使用templates_dir中的默认模板）
+        process_images: 是否处理图片
+        templates_dir: 模板文件目录
+        temp_dir: 临时文件目录（用于查找图片）
+
+    Returns:
+        是否成功
+    """
     try:
         # 设置默认模板
         if template_path is None:
-            template_path = DEFAULT_TEMPLATE
+            template_path = os.path.join(templates_dir, "客户货物运输托运书.xlsx")
 
         log(f"开始转换: {os.path.basename(input_path)}")
 
@@ -589,7 +628,7 @@ def json_to_excel(input_path: str, output_path: str, template_path: str = None, 
         # 保存Excel
         if process_images:
             # 使用模板并插入图片
-            save_excel_with_template_and_images(df, output_path, records, input_path, template_path)
+            save_excel_with_template_and_images(df, output_path, records, input_path, template_path, temp_dir)
         else:
             # 直接保存DataFrame
             df.to_excel(output_path, index=False)

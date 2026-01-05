@@ -68,9 +68,18 @@ def remove_empty_rows(worksheet):
     return deleted_count
 
 
-def preprocess_excel(excel_path):
-    """预处理单个Excel文件"""
+def preprocess_excel(excel_path, output_dir="data/preprocess"):
+    """预处理单个Excel文件
+
+    Args:
+        excel_path: 输入的Excel文件路径
+        output_dir: 输出目录（默认: data/preprocess）
+
+    Returns:
+        成功处理的文件列表
+    """
     excel_path = Path(excel_path)
+    output_dir = Path(output_dir)
     log(f"处理: {excel_path.name}")
 
     try:
@@ -87,7 +96,6 @@ def preprocess_excel(excel_path):
 
         # 保存结果
         output_files = []
-        output_dir = Path("data/preprocess")
         output_dir.mkdir(parents=True, exist_ok=True)
 
         if len(useful) == 1:

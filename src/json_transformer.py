@@ -116,7 +116,8 @@ def transform_idr_to_json(input_path: Union[str, Path],
 
 def transform_idr_from_temp(file_name: str = None,
                             output_dir: Union[str, Path] = "data/transformed",
-                            script_config: Optional[str] = None) -> Union[str, List[str]]:
+                            script_config: Optional[str] = None,
+                            temp_dir: Union[str, Path] = "data/temp") -> Union[str, List[str]]:
     """
     从 temp 目录转换IDR文件到 transform 目录
 
@@ -124,11 +125,12 @@ def transform_idr_from_temp(file_name: str = None,
         file_name: 文件名（如 "CDKJ.json"），如果为None则处理所有文件
         output_dir: 输出目录（默认: data/transformed）
         script_config: 脚本配置文件路径（当前未使用）
+        temp_dir: 临时文件目录（默认: data/temp）
 
     Returns:
         输出文件路径（单个文件或列表）
     """
-    temp_dir = Path("data/temp")
+    temp_dir = Path(temp_dir)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 

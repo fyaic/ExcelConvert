@@ -45,7 +45,44 @@ python main.py -i data/example.xlsx
 
 # 跳过预处理（已清洗的文件）
 python main.py -i data/clean.xlsx --skip-preprocessing
+
+# 使用自定义目录（例如E盘）
+python main.py -i E:/input --raw-dir E:/input --temp-dir E:/temp --output-dir E:/output
 ```
+
+### 环境变量配置（推荐）
+
+使用 `.env` 文件配置目录和LLM API，避免每次输入参数：
+
+```bash
+# 1. 创建 .env 文件
+cp .env.example .env
+
+# 2. 编辑 .env 文件
+# 配置目录（6个核心目录）
+# RAW_DIR=E:/input
+# PREPROCESS_DIR=E:/preprocess
+# TEMP_DIR=E:/temp
+# TRANSFORMED_DIR=E:/transformed
+# OUTPUT_DIR=E:/output
+# TEMPLATES_DIR=E:/templates
+
+# 配置LLM API（可选）
+# LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+# LLM_API_KEY=your-api-key-here
+# LLM_MODEL=glm-4.5-x
+
+# 3. 直接运行（自动读取 .env 配置）
+python main.py
+```
+
+**三种配置方式：**
+
+| 方式 | 适用场景 | 优先级 |
+|------|----------|--------|
+| **命令行参数** | 临时任务、测试 | 最高 |
+| **.env文件** | 固定工作流程 | 中等 |
+| **代码默认值** | 临时测试 | 最低 |
 
 ### 开发环境
 ```bash
@@ -54,7 +91,7 @@ python main.py -i data/clean.xlsx --skip-preprocessing
 source .venv/bin/activate  # Linux/Mac
 
 # 安装依赖
-pip install openpyxl pandas pyyaml langgraph requests
+pip install -r requirements.txt
 ```
 
 ### 调试方法
